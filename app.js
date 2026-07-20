@@ -1,10 +1,14 @@
-const http = require('http');
 
-const server = http.createServer((req, res) => {
-  res.write("Hello from DevOps Project 🚀");
-  res.end();
+const express = require('express');
+const app = express();
+
+// IMPORTANT: bind to 0.0.0.0 for Docker
+const PORT = 3000;
+
+app.get('/', (req, res) => {
+    res.send("CI/CD pipeline is working 🚀🔥");
 });
 
-server.listen(3000, () => {
-  console.log("Server running on port 3000");
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });
