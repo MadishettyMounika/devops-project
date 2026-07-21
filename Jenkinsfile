@@ -11,7 +11,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t devops-app:v1 .'
+                sh 'docker build  --no-cache -t devops-app:v1 .'
             }
         }
 
