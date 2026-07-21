@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "yourusername/devops-app:v1"
+        DOCKER_IMAGE = "madishettymounika/devops-app:v1"
     }
 
     stages {
 
-        stage('Clone Code') {
+        stage('Checkout Code') {
             steps {
-                echo 'Cloning repository...'
+                checkout scm
             }
         }
 
@@ -21,7 +21,21 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build --no-cache -t $DOCKER_IMAGE .'
+                sh 'docker build -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Docker Login') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    '''
+                }
             }
         }
 
@@ -42,6 +56,15 @@ pipeline {
             steps {
                 sh 'docker run -d -p 3001:3001 --name devops-container $DOCKER_IMAGE'
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment successful!'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check logs.'
         }
     }
 }
