@@ -1,7 +1,17 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = "yourusername/devops-app:v1"
+    }
+
     stages {
+
+        stage('Clone Code') {
+            steps {
+                echo 'Cloning repository...'
+            }
+        }
 
         stage('Install Dependencies') {
             steps {
@@ -11,20 +21,26 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build  --no-cache -t devops-app:v1 .'
+                sh 'docker build --no-cache -t $DOCKER_IMAGE .'
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                sh 'docker push $DOCKER_IMAGE'
             }
         }
 
         stage('Stop Old Container') {
             steps {
-                sh 'docker ps -q | xargs -r docker stop'
-                sh 'docker ps -aq | xargs -r docker rm'
+                sh 'docker stop devops-container || true'
+                sh 'docker rm devops-container || true'
             }
         }
 
         stage('Run New Container') {
             steps {
-                sh 'docker run -d -p 3001:3001 devops-app:v1'
+                sh 'docker run -d -p 3001:3001 --name devops-container $DOCKER_IMAGE'
             }
         }
     }
