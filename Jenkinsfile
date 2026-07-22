@@ -3,66 +3,50 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "madishettymounika/devops-app"
-        TAG = "v1"
+        TAG = "${BUILD_NUMBER}"
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/MadishettyMounika/devops-project.git'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm install'
+                git 'https://github.com/madishettymounika/devops-app.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE:$TAG .'
+                sh '''
+                docker build -t $DOCKER_IMAGE:$TAG .
+                '''
             }
         }
 
-        stage('Docker Login') {
+        stage('Login to DockerHub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                    echo $PASS | docker login -u $USER --password-stdin
                     '''
                 }
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Push Docker Image') {
             steps {
-                sh 'docker push $DOCKER_IMAGE:$TAG'
+                sh '''
+                docker push $DOCKER_IMAGE:$TAG
+                '''
             }
         }
 
         stage('Deploy Container') {
             steps {
                 sh '''
-                docker stop devops-container || true
-                docker rm devops-container || true
+                docker rm -f devops-container || true
                 docker run -d -p 3001:3001 --name devops-container $DOCKER_IMAGE:$TAG
                 '''
             }
-        }
-    }
-
-    post {
-        success {
-            echo "✅ Pipeline executed successfully!"
-        }
-        failure {
-            echo "❌ Pipeline failed!"
         }
     }
 }
