@@ -2,14 +2,15 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "madishettymounika/devops-app:v1"
+        DOCKER_IMAGE = "madishettymounika/devops-app"
+        TAG = "v1"
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/MadishettyMounika/devops-project.git'
             }
         }
 
@@ -21,7 +22,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker build -t $DOCKER_IMAGE:$TAG .'
             }
         }
 
@@ -33,7 +34,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
                     '''
                 }
             }
@@ -41,30 +42,27 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                sh 'docker push $DOCKER_IMAGE'
+                sh 'docker push $DOCKER_IMAGE:$TAG'
             }
         }
 
-        stage('Stop Old Container') {
+        stage('Deploy Container') {
             steps {
-                sh 'docker stop devops-container || true'
-                sh 'docker rm devops-container || true'
-            }
-        }
-
-        stage('Run New Container') {
-            steps {
-                sh 'docker run -d -p 3001:3001 --name devops-container $DOCKER_IMAGE'
+                sh '''
+                docker stop devops-container || true
+                docker rm devops-container || true
+                docker run -d -p 3001:3001 --name devops-container $DOCKER_IMAGE:$TAG
+                '''
             }
         }
     }
 
     post {
         success {
-            echo '✅ Deployment successful!'
+            echo "✅ Pipeline executed successfully!"
         }
         failure {
-            echo '❌ Pipeline failed. Check logs.'
+            echo "❌ Pipeline failed!"
         }
     }
 }
