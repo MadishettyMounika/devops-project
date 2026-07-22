@@ -8,12 +8,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout Code') {
-            steps {
-                git 'https://github.com/madishettymounika/devops-app.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 sh '''
