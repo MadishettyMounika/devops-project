@@ -42,7 +42,8 @@ pipeline {
 
         stage('Deploy Container') {
             steps {
-                sh 'docker rm -f devops-container || true'
+                sh 'docker rm -f devops-container || true' 
+                sh 'docker rm -f $(docker ps -aq) || true'
                 sh 'docker run -d -p 3001:3001 --name devops-container $DOCKER_IMAGE:latest'
             }
         }
