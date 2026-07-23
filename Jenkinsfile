@@ -27,13 +27,14 @@ pipeline {
         }
 
         stage('Push Docker Image') {
-            steps {
-                sh '''
-                docker push $DOCKER_IMAGE:$TAG
-                '''
-            }
-        }
-
+    steps {
+        sh '''
+        docker tag $DOCKER_IMAGE:$TAG $DOCKER_IMAGE:latest
+        docker push $DOCKER_IMAGE:$TAG
+        docker push $DOCKER_IMAGE:latest
+        '''
+    }
+}
         stage('Deploy Container') {
     steps {
         sh '''
